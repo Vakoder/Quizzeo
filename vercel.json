@@ -1,6 +1,3 @@
 {
-  "buildCommand": "cd quizzeo && npm run build",
-  "devCommand": "cd quizzeo && npm run dev",
-  "installCommand": "cd quizzeo && npm install",
-  "outputDirectory": "quizzeo/.next"
+  "rootDirectory": "quizzeo"
 }
