@@ -9,7 +9,7 @@ export default function DashboardPage() {
                 <a href="/dashboard/quizzes/select" className="p-4 border rounded hover:bg-gray-50">
                     Créer un Quiz
                 </a>
-                <a href="/dashboard/questions/create" className="p-4 border rounded hover:bg-gray-50">
+                <a href="/dashboard/questions/select/theme" className="p-4 border rounded hover:bg-gray-50">
                     Créer une Question
                 </a>
                 

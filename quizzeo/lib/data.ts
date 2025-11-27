@@ -88,3 +88,23 @@ export async function fetchThemes() {
     throw new Error('Failed to fetch themes.');
   }
 }
+
+export async function fetchQuizzesByTheme(themeId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('quizz')
+      .select('id, libelle, theme_id')
+      .eq('theme_id', themeId)
+      .order('libelle', { ascending: true });
+
+    if (error) {
+      console.error('Erreur lors du chargement des quiz:', error.message);
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch quizzes.');
+  }
+}

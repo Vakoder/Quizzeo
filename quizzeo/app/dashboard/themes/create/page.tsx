@@ -18,14 +18,6 @@ function SubmitButton() {
   );
 }
 
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * Formulaire pour créer un nouveau thème.
- * 
- * Utilisez react-dom useFormState et useFormStatus pour gérer les erreurs et les messages de validation.
- * 
-
-/*******  347c5297-66bc-446b-92ac-e7a06711d14a  *******/
 export default function CreateThemeForm() {
     const [state, dispatch] = useFormState(createTheme, initialState);
 

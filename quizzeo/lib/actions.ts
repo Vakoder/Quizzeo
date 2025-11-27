@@ -3,8 +3,7 @@
 import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { Run, Question, theme, Quizzes, Quiz, Response} from './definitions'; // Assurez-vous d'avoir les types Question, Run, etc.
-
+import { Run, Question, theme, Quizzes, Quiz, Response} from './definitions'; 
 
 const DUMMY_USER_ID = 'b7367e9c-85d7-4029-9e8c-905c31f41740';
 
@@ -98,7 +97,7 @@ export async function createTheme(prevState: State, formData: FormData): Promise
     try {
         const { data, error } = await supabase.from('theme').insert({
             libelle: libelle,
-            // createur: DUMMY_USER_ID, // Temporairement désactivé pour les tests
+            // createur: DUMMY_USER_ID, 
         });
         
         if (error) {
@@ -165,35 +164,98 @@ export async function createQuestion(prevState: State, formData: FormData): Prom
 
 
 const QuizSchema = z.object({
+  libelle: z.string().min(3, { message: "Le libellé doit contenir au moins 3 caractères." }),
   themeId: z.string().uuid({ message: "Le thème est invalide." }),
-  questionIds: z.string().refine(val => val.split(',').length === 10, {
-    message: "Le Quizz doit contenir exactement 10 questions IDs (séparés par des virgules).",
-  }),
 });
 
 export async function createQuiz(prevState: State, formData: FormData): Promise<State> {
     const validatedFields = QuizSchema.safeParse({
+        libelle: formData.get('libelle'),
         themeId: formData.get('themeId'),
-        questionIds: formData.get('questionIds'),
     });
 
     if (!validatedFields.success) {
-        return { message: validatedFields.error.issues[0].message };
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Champs manquants ou invalides. Échec de la création du quiz.',
+        };
     }
 
-    const { themeId, questionIds } = validatedFields.data;
-    const questionsArray = questionIds.split(','); 
+    const { libelle, themeId } = validatedFields.data;
 
     try {
-        await supabase.from('Quizzes').insert({
+        const { data, error } = await supabase.from('quizz').insert({
+            libelle: libelle,
             theme_id: themeId,
-            questions: questionsArray, 
-            creator_id: DUMMY_USER_ID, 
+            // questions: [], 
+            // creator_id: DUMMY_USER_ID, 
         });
         
+        if (error) {
+            console.error('Erreur Supabase lors de la création du quiz:', error);
+            return { message: `Erreur Base de Données: ${error.message}` };
+        }
+        
         revalidatePath('/dashboard/quizzes');
-        return { message: 'Quizz créé avec succès.' };
+        return { message: 'Quiz créé avec succès.' };
     } catch (error) {
-        return { message: 'Erreur Base de Données: Échec de la création du quizz.' };
+        console.error('Erreur inattendue dans createQuiz:', error);
+        return { message: 'Erreur Base de Données: Échec de la création du quiz.' };
+    }
+}
+
+const AddQuestionsSchema = z.object({
+  quizId: z.string().uuid({ message: "L'ID du quiz est invalide." }),
+  questionIds: z.array(z.string().uuid()).min(1, { message: "Au moins une question est requise." }),
+});
+
+export async function addQuestionsToQuiz(
+    quizId: string, 
+    questionIds: string[]
+): Promise<{ message: string; success: boolean }> {
+    const validatedFields = AddQuestionsSchema.safeParse({
+        quizId,
+        questionIds,
+    });
+
+    if (!validatedFields.success) {
+        return { 
+            message: validatedFields.error.flatten().fieldErrors.questionIds?.[0] || 'Validation échouée.',
+            success: false 
+        };
+    }
+
+    const { questionIds: validQuestionIds } = validatedFields.data;
+
+    try {
+        const relationsToInsert = validQuestionIds.map((questionId, index) => ({
+            quizz_id: quizId,
+            question_id: questionId,
+            ordre: index + 1
+        }));
+
+        const { error } = await supabase
+            .from('quizz_question')
+            .insert(relationsToInsert);
+
+        if (error) {
+            console.error('Erreur Supabase lors de l\'ajout des questions:', error);
+            return { 
+                message: `Erreur Base de Données: ${error.message}`,
+                success: false 
+            };
+        }
+
+        revalidatePath('/dashboard/quizzes');
+        return { 
+            message: `${validQuestionIds.length} question(s) ajoutée(s) avec succès.`,
+            success: true 
+        };
+    } catch (error) {
+        console.error('Erreur inattendue dans addQuestionsToQuiz:', error);
+        return { 
+            message: 'Erreur Base de Données: Échec de l\'ajout des questions.',
+            success: false 
+        };
     }
 }
