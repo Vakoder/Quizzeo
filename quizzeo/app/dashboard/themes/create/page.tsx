@@ -10,17 +10,11 @@ const initialState = {
   errors: {},
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button type="submit" aria-disabled={pending} className="p-3 bg-blue-600 text-white rounded disabled:bg-gray-400">
-      {pending ? 'Création en cours...' : 'Créer le Thème'}
-    </button>
-  );
-}
+
 
 export default function CreateThemeAction() {
     const [state, dispatch] = useActionState(createTheme, initialState);
+    const { pending } = useFormStatus();
 
     return (
         <main className="p-8 max-w-md mx-auto">
@@ -56,7 +50,9 @@ export default function CreateThemeAction() {
                     <Link href="/dashboard" className="p-3 border rounded text-gray-700 hover:bg-gray-100">
                         Annuler
                     </Link>
-                    <SubmitButton />
+                    <button type="submit" aria-disabled={pending} className="p-3 bg-blue-600 text-white rounded disabled:bg-gray-400">
+                        {pending ? 'Création en cours...' : 'Créer le Thème'}
+                    </button>
                 </div>
             </form>
         </main>

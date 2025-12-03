@@ -32,7 +32,6 @@ export async function createTheme(prevState: State, formData: FormData): Promise
     try {
         const { data, error } = await supabase.from('theme').insert({
             libelle: libelle,
-            // createur: DUMMY_USER_ID, 
         });
         
         if (error) {

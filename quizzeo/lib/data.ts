@@ -1,47 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { Questions, Run, theme } from '@/lib/definitions'; 
+import { Questions, theme } from '@/lib/definitions'; 
 
-interface RunWithPseudo extends Run {
-    pseudo: string; 
-}
-
-export async function fetchLeaderboard() {
-  try {
-    const { data, error } = await supabase
-      .from('run')
-      .select(`
-        id,
-        quiz_id,
-        joueur_id,
-        score_total,
-        created_at,
-        Users (
-          pseudo
-        )
-      `)
-      .order('score_total', { ascending: false }) 
-      .limit(10); 
-
-    if (error) {
-      console.error('Erreur lors du chargement du Leaderboard:', error.message);
-      return [];
-    }
-    const leaderboard = data.map(run => ({
-        id: run.id,
-        quiz_id: run.quiz_id,
-        joueur_id: run.joueur_id,
-        score_total: run.score_total,
-        created_at: run.created_at,
-        pseudo: run.Users?.[0]?.pseudo || 'Joueur Inconnu',
-    }));
-
-    return leaderboard as RunWithPseudo[];
-
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch leaderboard data.');
-  }
-}
 
 export async function fetchQuizById(quizId: string) {
   const { data: quizData, error: quizError } = await supabase
@@ -132,5 +91,74 @@ export async function fetchAllQuizzes() {
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch all quizzes.');
+  }
+}
+
+export async function fetchQuizWithQuestions(quizId: string) {
+  try {
+    // Récupérer le quiz avec son thème
+    const { data: quizData, error: quizError } = await supabase
+      .from('quizz')
+      .select(`
+        id,
+        libelle,
+        theme_id,
+        theme (
+          libelle
+        )
+      `)
+      .eq('id', quizId)
+      .single();
+
+    if (quizError || !quizData) {
+      console.error('Erreur lors du chargement du quiz:', quizError);
+      return null;
+    }
+
+    // Récupérer les relations quiz-questions
+    const { data: relationsData, error: relationsError } = await supabase
+      .from('quizz_question')
+      .select('question_id, ordre')
+      .eq('quizz_id', quizId)
+      .order('ordre', { ascending: true });
+
+    if (relationsError) {
+      console.error('Erreur lors du chargement des relations:', relationsError);
+      return null;
+    }
+
+    // Si pas de questions, retourner le quiz sans questions
+    if (!relationsData || relationsData.length === 0) {
+      return {
+        ...quizData,
+        questions: []
+      };
+    }
+
+    // Récupérer les détails des questions
+    const questionIds = relationsData.map(r => r.question_id);
+    const { data: questionsData, error: questionsError } = await supabase
+      .from('question')
+      .select('*')
+      .in('id', questionIds);
+
+    if (questionsError) {
+      console.error('Erreur lors du chargement des questions:', questionsError);
+      return null;
+    }
+
+    // Réorganiser les questions selon l'ordre défini
+    const questionsMap = new Map(questionsData.map(q => [q.id, q]));
+    const orderedQuestions = relationsData
+      .map(r => questionsMap.get(r.question_id))
+      .filter(q => q !== undefined);
+
+    return {
+      ...quizData,
+      questions: orderedQuestions
+    };
+  } catch (error) {
+    console.error('Database Error:', error);
+    return null;
   }
 }

@@ -34,17 +34,3 @@ export type Questions = Question[];
 export type Quizzes = Quiz[];
 export type Responses = Response[];
 
-export type Response = {
-    id: string;
-    run_id: string;
-    question_id: string;
-    mode: 'duo' | 'carre' | 'cash'; 
-    reponse: string; 
-}
-
-export type Run = {
-    id: string;
-    quiz_id: string;
-    joueur_id: string;
-    score_total: number;
-}
