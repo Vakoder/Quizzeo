@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { createTheme } from '@/lib/actions'; 
 import Link from 'next/link';
 
@@ -18,8 +19,8 @@ function SubmitButton() {
   );
 }
 
-export default function CreateThemeForm() {
-    const [state, dispatch] = useFormState(createTheme, initialState);
+export default function CreateThemeAction() {
+    const [state, dispatch] = useActionState(createTheme, initialState);
 
     return (
         <main className="p-8 max-w-md mx-auto">

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Questions, Quizzes, Run, theme, User } from '@/lib/definitions'; 
+import { Questions, Run, theme } from '@/lib/definitions'; 
 
 interface RunWithPseudo extends Run {
     pseudo: string; 
@@ -106,5 +106,31 @@ export async function fetchQuizzesByTheme(themeId: string) {
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch quizzes.');
+  }
+}
+
+export async function fetchAllQuizzes() {
+  try {
+    const { data, error } = await supabase
+      .from('quizz')
+      .select(`
+        id,
+        libelle,
+        theme_id,
+        theme (
+          libelle
+        )
+      `)
+      .order('libelle', { ascending: true });
+
+    if (error) {
+      console.error('Erreur lors du chargement des quiz:', error.message);
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch all quizzes.');
   }
 }

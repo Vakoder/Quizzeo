@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { addQuestionsToQuiz } from '@/lib/actions';
 
-const DUMMY_USER_ID = 'b7367e9c-85d7-4029-9e8c-905c31f41740';
-
 interface Question {
     libelle: string;
     correctAnswer: string;

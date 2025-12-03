@@ -45,7 +45,7 @@ export default function SelectThemeForm() {
                         disabled={loading}
                     >
                         <option value="">
-                            {loading ? '-- Chargement des thèmes... --' : '-- Sélectionner un thème --'}
+                            {loading ? '-- Chargement des thèmes... --' : '-- Sélectionnez un thème --'}
                         </option>
                         {themes.map((theme) => (
                             <option key={theme.id} value={theme.id}>
